@@ -1,0 +1,69 @@
+---
+name: GitHub Classroom Workflow
+
+on:
+  - push
+  - workflow_dispatch
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  build:
+    name: Autograding
+    runs-on: self-hosted
+    timeout-minutes: 15
+    if: github.actor != 'github-classroom[bot]'
+
+    steps:
+      # Checkout
+      - uses: actions/checkout@v4
+
+      # Setup Dependencies
+      - name: "Setup yq"
+        uses: dcarbone/install-yq-action@v1.1.1
+        with:
+          version: "v4.40.5"
+
+      - name: "Setup python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: "Setup node tooling"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: "Setup redis cli"
+        run: npm install -g redis-cli
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install student's application with poetry install
+        run: poetry install --directory lab3 --no-root
+
+      # Get Test Files
+      - name: Download all autograder scripts
+        run: |
+          curl --header "X-API-KEY:${{ secrets.AUTOGRADER_API_AUTH_KEY }}" -s ${{ vars.AUTOGRADER_API_URL }}/static/lab3/L3-1-maindeps.sh --output 1-maindeps.sh
+          curl --header "X-API-KEY:${{ secrets.AUTOGRADER_API_AUTH_KEY }}" -s ${{ vars.AUTOGRADER_API_URL }}/static/lab3/L3-2-devdeps.sh --output 2-devdeps.sh
+          curl --header "X-API-KEY:${{ secrets.AUTOGRADER_API_AUTH_KEY }}" -s ${{ vars.AUTOGRADER_API_URL }}/static/lab3/L3-3-application-requirements.sh --output 3-application-requirements.sh
+          curl --header "X-API-KEY:${{ secrets.AUTOGRADER_API_AUTH_KEY }}" -s ${{ vars.AUTOGRADER_API_URL }}/static/lab3/L3-5-docker-deployment.sh --output 5-docker-deployment.sh
+          curl --header "X-API-KEY:${{ secrets.AUTOGRADER_API_AUTH_KEY }}" -s ${{ vars.AUTOGRADER_API_URL }}/static/lab3/L3-test_autograder.py --output lab3/tests/test_autograder.py
+
+      # Setup Minikube
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.5.0
+        with:
+          install_only: true
+
+      - name: Run Autograder Scripts
+        uses: education/autograding@v1
