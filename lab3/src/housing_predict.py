@@ -68,8 +68,12 @@ class House(BaseModel):
             return v
         raise ValueError("Invalid value for Longitude")
 
-    def to_np(self):
-        return np.array(list(vars(self).values())).reshape(1, 8)
+    def to_np(self) -> np.ndarray:
+        return np.array([
+            self.MedInc, self.HouseAge, self.AveRooms,
+            self.AveBedrms, self.Population, self.AveOccup,
+            self.Latitude, self.Longitude
+        ]).reshape(1,8)
 
 class BulkHousePredictionRequest(BaseModel):
     # data model for prediction requests
@@ -99,36 +103,20 @@ async def multi_predict(houses_data: List[House]) -> List[float]:
         return []
     
     # converting to array for vectorized prediction
-    input_matrix = np.array([list(vars(house).values()) for house in houses_data])
-    predictions = model.predict(input_matrix).tolist()
-    return predictions
+    request = BulkHousePredictionRequest(houses=houses_data)
+    input_matrix = request.to_np()
+
+    return model.predict(input_matrix).tolist()
 
 @sub_application_housing_predict.post("/predict", response_model=HousePrediction)
-async def predict(house: House, request: Request):
+async def predict(house: House) -> HousePrediction:
     # raw input for caching
-    raw_input = await request.json()
-    # making prediction using the globally loaded model
     predict_value = float(model.predict(house.to_np())[0])
-    
-    # storing prediction in cache 
-    await FastAPICache.set(f"prediction:{raw_input}", 
-                    {"input": raw_input, "prediction": predict_value, 
-                     "timestamp": datetime.now().isoformat()})
-    
     return HousePrediction(prediction=predict_value)
 
 @sub_application_housing_predict.post("/bulk-predict", response_model=BulkHousePrediction)
-async def bulk_predict(request_data: BulkHousePredictionRequest, request: Request):
-    # raw input for caching
-    raw_input = await request.json()
-    # using multi_predict function for vectorized predictions
+async def bulk_predict(request_data: BulkHousePredictionRequest) -> BulkHousePrediction:
     predictions = await multi_predict(request_data.houses)
-    
-    # store bulk prediction in cache 
-    await FastAPICache.set(f"bulk-prediction:{raw_input}", 
-                    {"input": raw_input, "predictions": predictions, 
-                     "timestamp": datetime.now().isoformat()})
-    
     return BulkHousePrediction(predictions=predictions)
 
 @sub_application_housing_predict.get("/hello")
