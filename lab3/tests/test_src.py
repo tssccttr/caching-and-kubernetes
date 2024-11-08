@@ -173,7 +173,7 @@ async def test_bulk_predict_output_model():
     assert bulk_predict_route is not None
     assert bulk_predict_route.response_model is not None
     
-    data = {
+    test_data = {
         "houses": [
             {
                 "MedInc": 1,
@@ -187,20 +187,14 @@ async def test_bulk_predict_output_model():
             }
         ]
     }
-    
-    annotations = list(bulk_predict_route.endpoint.__annotations__.items())
-    assert len(annotations) >= 1
-    
-    input_model = list(filter(lambda x: x[0] != "return", annotations))
-    input_value = input_model[0][1].model_validate(data)
-    
-    try:
-        function_response = await bulk_predict_route.endpoint(input_value)
-    except TypeError:
-        function_response = bulk_predict_route.endpoint(input_value)
-    
-    assert isinstance(function_response, bulk_predict_route.response_model)
 
+    class MockRequest:
+        async def json(self):
+            return data.model_dump()
+    
+    response = await bulk_predict_route.endpoint(data, MockRequest())
+    assert isinstance (response, BulkHousePrediction)
+    
 @pytest.fixture
 def anyio_backend():
     return "asyncio"
