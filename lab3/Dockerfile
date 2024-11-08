@@ -1,4 +1,4 @@
-# Base Arguements to leverage across build stages
+# base arguments to leverage across build stages
 ARG APP_DIR=/app
 
 #############
@@ -7,7 +7,7 @@ ARG APP_DIR=/app
 FROM python:3.11-slim AS build
 ARG APP_DIR
 
-# Install curl so we can get poetry
+# install curl to get poetry
 # install build-base and libffi-dev so we can install poetry and dependencies (compiles some code)
 RUN apt-get update && apt-get install -y \
   curl build-essential libffi-dev \
@@ -22,7 +22,7 @@ ENV PATH /root/.local/bin:$PATH
 WORKDIR ${APP_DIR}
 COPY pyproject.toml poetry.lock ./
 
-# Copy over the venv including any symbolic links, do not install development/testing libraries when install poetry dependencies
+# copy over the venv including any symbolic links, do not install development/testing libraries when install poetry dependencies
 RUN python -m venv --copies ${APP_DIR}/venv
 RUN . ${APP_DIR}/venv/bin/activate && poetry install --no-root --only main
 
@@ -37,7 +37,5 @@ ENV PATH ${APP_DIR}/venv/bin:$PATH
 
 WORKDIR ${APP_DIR}/
 COPY . ./
-
-HEALTHCHECK --start-period=30s CMD python -c "import requests; requests.get('http://localhost:8000/lab/health', timeout=2)"
 
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0"]
