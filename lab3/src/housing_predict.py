@@ -1,12 +1,15 @@
 import logging
 from contextlib import asynccontextmanager
+import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.decorator import cache
 from joblib import load
 from redis import asyncio
 from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import List
 import numpy as np
 
@@ -69,7 +72,7 @@ class House(BaseModel):
         return np.array(list(vars(self).values())).reshape(1, 8)
 
 class BulkHousePredictionRequest(BaseModel):
-    """Data model for bulk prediction requests."""
+    # data model for prediction requests
     model_config = ConfigDict(extra="forbid")
     houses: List[House]
 
@@ -90,8 +93,7 @@ sub_application_housing_predict = FastAPI(lifespan=lifespan_mechanism)
 # Do not change this function name.
 # See the Input Vectorization subsection in the readme for more instructions
 @cache(expire=3600)
-async def multi_predict(houses_data: List[House]) --> List[float]:
-    
+async def multi_predict(houses_data: List[House]) -> List[float]:
     # vectorized predictions on multiple house inputs, returns ist of predicted house prices
     if not houses_data:
         return []
@@ -105,12 +107,11 @@ async def multi_predict(houses_data: List[House]) --> List[float]:
 async def predict(house: House, request: Request):
     # raw input for caching
     raw_input = await request.json()
-    
     # making prediction using the globally loaded model
     predict_value = float(model.predict(house.to_np())[0])
     
     # storing prediction in cache 
-    FastAPICache.set(f"prediction:{raw_input}", 
+    await FastAPICache.set(f"prediction:{raw_input}", 
                     {"input": raw_input, "prediction": predict_value, 
                      "timestamp": datetime.now().isoformat()})
     
@@ -120,12 +121,11 @@ async def predict(house: House, request: Request):
 async def bulk_predict(request_data: BulkHousePredictionRequest, request: Request):
     # raw input for caching
     raw_input = await request.json()
-    
     # using multi_predict function for vectorized predictions
     predictions = await multi_predict(request_data.houses)
     
     # store bulk prediction in cache 
-    FastAPICache.set(f"bulk-prediction:{raw_input}", 
+    await FastAPICache.set(f"bulk-prediction:{raw_input}", 
                     {"input": raw_input, "predictions": predictions, 
                      "timestamp": datetime.now().isoformat()})
     
