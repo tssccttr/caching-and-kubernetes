@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "lab2"
+name = "src"
 version = "0.1.0"
 description = ""
 authors = ["Tess Cotter <tesscc@berkeley.edu>"]
@@ -7,9 +7,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "~3.11"
-fastapi = {extras = ["standard"], version = "^0.112.2"}
-fastapi-cache2 = "0.1.9"
-redis = "^5.0.1"
+fastapi = {version = "^0.112.2", extras = ["standard"]}
+fastapi-cache2 = {version = "0.1.9", extras = ["redis"]}
 joblib = "1.4.2"
 scikit-learn = "1.5.2"
 
@@ -18,5 +17,5 @@ ruff = "^0.6.2"
 pytest = "^8.3.2"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
