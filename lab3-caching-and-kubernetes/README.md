@@ -1,5 +1,7 @@
 # California Housing Price Prediction Service
 
+Final submission folder is lab3-caching-and-kubernetes.
+
 ## Overview
 This project implements a machine learning service that predicts California housing prices, deployed as a containerized application using FastAPI and Redis caching on Kubernetes. The service expansion enables bulk prediction endpoints, utilizing a pre-trained scikit-learn model for making predictions about house prices based on features like median income, house age, and geographic location.
 
@@ -69,7 +71,7 @@ build-backend = "poetry.core.masonry.api"
 
 ## Initial directions cloning and running with Minikube: 
 
-Clone the repository: git clone https://github.com/UCB-W255/lab-3-caching-and-kubernetes-tssccttr.git
+Clone the repository: git clone https://github.com/UCB-W255/lab-3-caching-and-kubernetes-tssccttr/tree/main/lab3-caching-and-kubernetes
 
 1. Start Minikube
 ```bash
@@ -113,11 +115,10 @@ kubectl get services -n w255
 # Get service URL
 minikube service lab3api-service --url --namespace=w255
 ```
-
-## Cleanup
+6. Cleanup
 ```bash
-# Delete all resources
 kubectl delete namespace w255
+minikube stop
 ```
 
  
