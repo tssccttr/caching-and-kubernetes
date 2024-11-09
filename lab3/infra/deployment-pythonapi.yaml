@@ -43,7 +43,7 @@ spec:
         - containerPort: 8000
         env:
         - name: REDIS_URL
-          value: "redis://redis-service.w255.svc.cluster.local:6379/0"
+          value: "redis://redis-service.w255.svc.cluster.local:6379"
         startupProbe:
           httpGet:
             path: /lab/health
