@@ -1,6 +1,6 @@
 # California Housing Price Prediction Service
 
-Final submission folder is lab3-caching-and-kubernetes.
+Final submission folder is lab3.
 
 ## Overview
 This project implements a machine learning service that predicts California housing prices, deployed as a containerized application using FastAPI and Redis caching on Kubernetes. The service expansion enables bulk prediction endpoints, utilizing a pre-trained scikit-learn model for making predictions about house prices based on features like median income, house age, and geographic location.
