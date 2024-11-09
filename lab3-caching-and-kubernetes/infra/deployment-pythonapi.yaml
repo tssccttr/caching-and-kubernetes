@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-deployment
+  name: lab3api
   namespace: w255
 spec:
   replicas: 3
