@@ -39,6 +39,7 @@ spec:
       containers:
       - name: lab3api
         image: lab3:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
         env:
