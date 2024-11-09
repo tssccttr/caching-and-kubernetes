@@ -114,7 +114,7 @@ async def predict(house: House) -> HousePrediction:
     predict_value = float(model.predict(house.to_np())[0])
     return HousePrediction(prediction=predict_value)
 
-@sub_application_housing_predict.post("/bulk-predict", response_model=BulkHousePrediction)
+@sub_application_housing_predict.post("/bulk-predict", response_model=BulkHousePrediction, status_code=200)
 async def bulk_predict(request_data: BulkHousePredictionRequest) -> BulkHousePrediction:
     if not request_data.houses:
         return BulkHousePrediction(predictions=[])
