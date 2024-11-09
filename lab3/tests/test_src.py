@@ -3,7 +3,6 @@ from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
-from src.housing_predict import House, BulkHousePredictionRequest, BulkHousePrediction
 
 from src.main import app
 
@@ -169,7 +168,7 @@ async def test_bulk_predict_output_model():
 
     for route in routes:
         if route.path == "/lab":
-            sub_app = route.sub_app
+            sub_app = route.app
 
             for sub_route in sub_app.routes:
                 if sub_route.path == "/bulk-predict":
@@ -180,21 +179,27 @@ async def test_bulk_predict_output_model():
     assert bulk_predict_route is not None
     assert bulk_predict_route.response_model is not None
     
-    test_data = House(
-        "MedInc": 1,
-        "HouseAge": 2,
-        "AveRooms": 3,
-        "AveBedrms": 4,
-        "Population": 5,
-        "AveOccup": 6,
-        "Latitude": 7,
-        "Longitude": 8,
-    )
+    test_data = {
+        "houses": [
+            {
+                "MedInc": 1,
+                "HouseAge": 2,
+                "AveRooms": 3,
+                "AveBedrms": 4,
+                "Population": 5,
+                "AveOccup": 6,
+                "Latitude": 7,
+                "Longitude": 8,
+            }
+        ]
+    }
 
-    request_data = BulkHousePredictionRequest(houses=[test_house])
-    
-    response = await bulk_predict_route.endpoint(data, MockRequest())
-    assert isinstance (response, BulkHousePrediction)
+    input_model = bulk_predict_route.endpoint.__annotations__["request_data"]
+    request_data = input_model.model_validate(test_data)
+    response = await bulk_predict_route.endpoint(request_data)
+    assert response is not None
+    assert isinstance(response.predictions, list)
+    assert all(isinstance(pred, float) for pred in response.predictions)
     
 @pytest.fixture
 def anyio_backend():
