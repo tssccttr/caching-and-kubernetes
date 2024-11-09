@@ -9,6 +9,7 @@ readme = "README.md"
 python = "~3.11"
 fastapi = {version = "^0.112.2", extras = ["standard"]}
 fastapi-cache2 = {version = "0.1.9", extras = ["redis"]}
+redis = ">=4.2.0rc1,<5.0.0"
 joblib = "1.4.2"
 scikit-learn = "1.5.2"
 
