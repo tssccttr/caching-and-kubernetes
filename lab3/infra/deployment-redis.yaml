@@ -19,16 +19,24 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 6379
+        startupProbe:  # added startup probe
+          tcpSocket:
+            port: 6379
+          failureThreshold: 30
+          periodSeconds: 10
         readinessProbe:
           tcpSocket:
             port: 6379
           initialDelaySeconds: 5
-          periodSeconds: 10
+          periodSeconds: 5
+          failureThreshold: 3
         livenessProbe:
           tcpSocket:
             port: 6379
           initialDelaySeconds: 15
           periodSeconds: 20
+          timeoutSeconds: 1
+          failureThreshold: 3
         resources:
           requests:
             cpu: 100m
