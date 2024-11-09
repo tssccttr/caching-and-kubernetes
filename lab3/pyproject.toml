@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "src"
+version = "0.1.0"
+description = ""
+authors = ["Tess Cotter <tesscc@berkeley.edu>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.11"
+fastapi = {version = "^0.112.2", extras = ["standard"]}
+fastapi-cache2 = {version = "0.1.9", extras = ["redis"]}
+redis = ">=4.2.0rc1,<5.0.0"
+joblib = "1.4.2"
+scikit-learn = "1.5.2"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.2"
+pytest = "^8.3.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
