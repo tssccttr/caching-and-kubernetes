@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from src.housing_predict import House, BulkHousePredictionRequest, BulkHousePrediction
 
 from src.main import app
 
@@ -165,32 +166,32 @@ def test_bulk_predict_validation(test_data_bulk):
 async def test_bulk_predict_output_model():
     routes = app.routes
     bulk_predict_route = None
+
     for route in routes:
-        if route.path == "/lab/bulk-predict":
-            bulk_predict_route = route
+        if route.path == "/lab":
+            sub_app = route.sub_app
+
+            for sub_route in sub_app.routes:
+                if sub_route.path == "/bulk-predict":
+                    bulk_predict_route = sub_route
+                    break
             break
     
     assert bulk_predict_route is not None
     assert bulk_predict_route.response_model is not None
     
-    test_data = {
-        "houses": [
-            {
-                "MedInc": 1,
-                "HouseAge": 2,
-                "AveRooms": 3,
-                "AveBedrms": 4,
-                "Population": 5,
-                "AveOccup": 6,
-                "Latitude": 7,
-                "Longitude": 8,
-            }
-        ]
-    }
+    test_data = House(
+        "MedInc": 1,
+        "HouseAge": 2,
+        "AveRooms": 3,
+        "AveBedrms": 4,
+        "Population": 5,
+        "AveOccup": 6,
+        "Latitude": 7,
+        "Longitude": 8,
+    )
 
-    class MockRequest:
-        async def json(self):
-            return data.model_dump()
+    request_data = BulkHousePredictionRequest(houses=[test_house])
     
     response = await bulk_predict_route.endpoint(data, MockRequest())
     assert isinstance (response, BulkHousePrediction)

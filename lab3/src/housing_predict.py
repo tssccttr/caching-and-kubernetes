@@ -116,6 +116,9 @@ async def predict(house: House) -> HousePrediction:
 
 @sub_application_housing_predict.post("/bulk-predict", response_model=BulkHousePrediction)
 async def bulk_predict(request_data: BulkHousePredictionRequest) -> BulkHousePrediction:
+    if not request_data.houses:
+        return BulkHousePrediction(predictions=[])
+
     predictions = await multi_predict(request_data.houses)
     return BulkHousePrediction(predictions=predictions)
 
