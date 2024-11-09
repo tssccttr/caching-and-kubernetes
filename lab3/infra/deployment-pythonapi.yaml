@@ -16,7 +16,7 @@ spec:
       initContainers:
       - name: init-verify-redis-service-dns
         image: busybox:1.36
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ['sh', '-c']
         args:
           - |
@@ -28,7 +28,7 @@ spec:
             exit 1
       - name: init-verify-redis-ready
         image: busybox:1.36
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ['sh', '-c']
         args:
           - |

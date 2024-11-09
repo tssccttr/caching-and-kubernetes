@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: redis
-        image: redis
-        imagePullPolicy: IfNotPresent
+        image: redis:latest
+        imagePullPolicy: Always # alt IfNotPresent
         ports:
         - containerPort: 6379
         startupProbe:  # added startup probe
