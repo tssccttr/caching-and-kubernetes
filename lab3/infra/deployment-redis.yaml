@@ -1,4 +1,4 @@
-from kubernetes import client, config
+from kubernetes import client, config, exceptions
 
 # load the Kubernetes configuration
 config.load_kube_config()
@@ -70,18 +70,37 @@ redis_deployment = client.V1Deployment(
 
 # create or update the Redis deployment
 try:
+    # try to create the Redis deployment
     api.create_namespaced_deployment(
         body=redis_deployment,
         namespace="w255"
     )
     print("Redis deployment created successfully.")
-except client.exceptions.ApiException as e:
+except exceptions.ApiException as e:
+    # Check if the deployment already exists (409 Conflict)
     if e.status == 409:
-        api.patch_namespaced_deployment(
-            name="redis",
-            namespace="w255",
-            body=redis_deployment
-        )
-        print("Redis deployment updated successfully.")
+        print("Redis deployment already exists. Attempting to update...")
+        try:
+            # Patch the deployment (only the spec part)
+            api.patch_namespaced_deployment(
+                name="redis",
+                namespace="w255",
+                body={
+                    "spec": redis_deployment.spec
+                }
+            )
+            print("Redis deployment updated successfully.")
+        except exceptions.ApiException as patch_error:
+            print(f"Error updating Redis deployment: {patch_error}")
     else:
         print(f"Error creating Redis deployment: {e}")
+
+    try:
+    api = client.CoreV1Api()
+    api.read_namespace(name="w255")
+except exceptions.ApiException as e:
+    if e.status == 404:
+        print("Namespace 'w255' not found. Please create it first.")
+        # handle or exit
+    else:
+        raise
