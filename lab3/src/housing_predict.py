@@ -45,7 +45,7 @@ class House(BaseModel):
     """Data model to parse the request body JSON for a single house."""
     model_config = ConfigDict(extra="forbid")
 
-    MedInc: float = Field(gt=0)
+    MedInc: float = Field(ge=0)
     HouseAge: float
     AveRooms: float
     AveBedrms: float
