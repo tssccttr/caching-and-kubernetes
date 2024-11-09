@@ -1,37 +1,87 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: redis
-  namespace: w255
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: redis
-  template:
-    metadata:
-      labels:
-        app: redis
-    spec:
-      containers:
-      - name: redis
-        image: redis:7.2.3
-        ports:
-        - containerPort: 6379
-        readinessProbe:
-          tcpSocket:
-            port: 6379
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          tcpSocket:
-            port: 6379
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        resources:
-          requests:
-            cpu: 100m
-            memory: 100Mi
-          limits:
-            cpu: 200m
-            memory: 200Mi
+from kubernetes import client, config
+
+# load the Kubernetes configuration
+config.load_kube_config()
+
+# create the Kubernetes API client
+api = client.AppsV1Api()
+
+# define the Redis deployment
+redis_deployment = client.V1Deployment(
+    api_version="apps/v1",
+    kind="Deployment",
+    metadata=client.V1ObjectMeta(
+        name="redis",
+        namespace="w255"
+    ),
+    spec=client.V1DeploymentSpec(
+        replicas=1,
+        selector=client.V1LabelSelector(
+            match_labels={
+                "app": "redis"
+            }
+        ),
+        template=client.V1PodTemplateSpec(
+            metadata=client.V1ObjectMeta(
+                labels={
+                    "app": "redis"
+                }
+            ),
+            spec=client.V1PodSpec(
+                containers=[
+                    client.V1Container(
+                        name="redis",
+                        image="lab3:latest",  
+                        ports=[
+                            client.V1ContainerPort(
+                                container_port=6379
+                            )
+                        ],
+                        readiness_probe=client.V1Probe(
+                            tcp_socket=client.V1TCPSocketAction(
+                                port=6379
+                            ),
+                            initial_delay_seconds=5,
+                            period_seconds=10
+                        ),
+                        liveness_probe=client.V1Probe(
+                            tcp_socket=client.V1TCPSocketAction(
+                                port=6379
+                            ),
+                            initial_delay_seconds=15,
+                            period_seconds=20
+                        ),
+                        resources=client.V1ResourceRequirements(
+                            requests={
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            },
+                            limits={
+                                "cpu": "200m",
+                                "memory": "200Mi"
+                            }
+                        )
+                    )
+                ]
+            )
+        )
+    )
+)
+
+# create or update the Redis deployment
+try:
+    api.create_namespaced_deployment(
+        body=redis_deployment,
+        namespace="w255"
+    )
+    print("Redis deployment created successfully.")
+except client.exceptions.ApiException as e:
+    if e.status == 409:
+        api.patch_namespaced_deployment(
+            name="redis",
+            namespace="w255",
+            body=redis_deployment
+        )
+        print("Redis deployment updated successfully.")
+    else:
+        print(f"Error creating Redis deployment: {e}")
