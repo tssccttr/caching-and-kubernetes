@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pythonapi
+  name: lab3api
   namespace: w255
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: pythonapi
+      app: lab3api
   template:
     metadata:
       labels:
-        app: pythonapi
+        app: lab3api
     spec:
       initContainers:
       - name: init-verify-redis-service-dns
@@ -37,7 +37,7 @@ spec:
             done
             exit 1
       containers:
-      - name: pythonapi
+      - name: lab3api
         image: lab3:latest
         ports:
         - containerPort: 8000
