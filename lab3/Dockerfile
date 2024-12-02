@@ -3,15 +3,11 @@ ARG APP_DIR=/app
 ARG PYTHON_VERSION=3.11
 ARG POETRY_VERSION=1.8.2
 
-#############
-# Build image
-#############
+# Build Image
 FROM python:${PYTHON_VERSION}-slim AS build
 ARG APP_DIR
 ARG POETRY_VERSION
 
-# install curl to get poetry
-# install build-base and libffi-dev so we can install poetry and dependencies (compiles some code)
 RUN apt-get update && apt-get install -y \
   curl build-essential libffi-dev \
   && rm -rf /var/lib/apt/lists/*
@@ -20,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 RUN curl -sSL https://install.python-poetry.org | python -
 ENV PATH /root/.local/bin:$PATH
 
-# change work directory for where our app will live
+# change work directory for where app will live
 WORKDIR ${APP_DIR}
 COPY pyproject.toml poetry.lock ./
 
@@ -28,9 +24,7 @@ COPY pyproject.toml poetry.lock ./
 RUN python -m venv --copies ${APP_DIR}/venv
 RUN . ${APP_DIR}/venv/bin/activate && poetry install --no-root --only main
 
-#############
 # Deployment image
-#############
 FROM python:${PYTHON_VERSION}-slim as lab3
 ARG APP_DIR
 
