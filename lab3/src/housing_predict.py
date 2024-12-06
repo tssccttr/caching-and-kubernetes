@@ -36,7 +36,7 @@ async def lifespan_mechanism(app: FastAPI):
     # prefix for the submission.
     FastAPICache.init(RedisBackend(redis), prefix="w255-cache-prediction")
 
-    yieldn
+    yield
     logging.info("Shutting down Lab3 API")
 
 class House(BaseModel):
