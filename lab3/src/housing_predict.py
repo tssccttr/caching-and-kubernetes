@@ -16,7 +16,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 model = None
 
-LOCAL_REDIS_URL = "redis://localhost:6379/0"
+LOCAL_REDIS_URL = "redis://localhost:6379"
 
 
 @asynccontextmanager
@@ -36,9 +36,7 @@ async def lifespan_mechanism(app: FastAPI):
     # prefix for the submission.
     FastAPICache.init(RedisBackend(redis), prefix="w255-cache-prediction")
 
-    yield
-    # We don't need a shutdown event for our system, but we could put something
-    # here after the yield to deal with things during shutdown
+    yieldn
     logging.info("Shutting down Lab3 API")
 
 class House(BaseModel):
@@ -96,7 +94,6 @@ sub_application_housing_predict = FastAPI(lifespan=lifespan_mechanism)
 
 # Do not change this function name.
 # See the Input Vectorization subsection in the readme for more instructions
-@cache(expire=3600)
 async def multi_predict(houses_data: List[House]) -> List[float]:
     # vectorized predictions on multiple house inputs, returns ist of predicted house prices
     if not houses_data:
@@ -109,18 +106,17 @@ async def multi_predict(houses_data: List[House]) -> List[float]:
     return model.predict(input_matrix).tolist()
 
 @sub_application_housing_predict.post("/predict", response_model=HousePrediction)
+@cache(expire=3600)
 async def predict(house: House) -> HousePrediction:
     # raw input for caching
-    predict_value = float(model.predict(house.to_np())[0])
-    return HousePrediction(prediction=predict_value)
+    predictions = await multi_predict([house])
+    return HousePrediction(prediction=predictions[0])
 
 @sub_application_housing_predict.post("/bulk-predict", response_model=BulkHousePrediction)
+@cache(expire=3600)
 async def bulk_predict(request_data: BulkHousePredictionRequest) -> BulkHousePrediction:
-    if not request_data.houses:
-        return BulkHousePrediction(predictions=[])
-
-    predictions = await multi_predict(request_data.houses)
-    return BulkHousePrediction(predictions=predictions)
+	predictions = await multi_predict(request_data.houses)
+	return BulkHousePrediction(predictions=predictions)
 
 @sub_application_housing_predict.get("/hello")
 async def hello(name: str):
