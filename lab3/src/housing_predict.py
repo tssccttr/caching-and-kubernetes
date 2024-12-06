@@ -91,7 +91,6 @@ class BulkHousePrediction(BaseModel):
 
 sub_application_housing_predict = FastAPI(lifespan=lifespan_mechanism)
 
-
 # Do not change this function name.
 # See the Input Vectorization subsection in the readme for more instructions
 async def multi_predict(houses_data: List[House]) -> List[float]:
@@ -108,14 +107,12 @@ async def multi_predict(houses_data: List[House]) -> List[float]:
 @sub_application_housing_predict.post("/predict", response_model=HousePrediction)
 @cache(expire=3600)
 async def predict(house: House) -> HousePrediction:
-    await
     predictions = await multi_predict([house])
     return HousePrediction(prediction=predictions[0])
 
 @sub_application_housing_predict.post("/bulk-predict", response_model=BulkHousePrediction)
 @cache(expire=3600)
 async def bulk_predict(request_data: BulkHousePredictionRequest) -> BulkHousePrediction:
-    await
 	predictions = await multi_predict(request_data.houses)
 	return BulkHousePrediction(predictions=predictions)
 
